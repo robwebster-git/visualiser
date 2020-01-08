@@ -11,32 +11,27 @@
       <h1 id="main_title"> Archaeological Finds </h1>
         <div class="row">
             <p>Select items matching the following criteria:</p>
-            <form name="select_form" action="#" method="post" onsubmit="return processForm(this)">
+            <form id="main_form" name="main_form" action="#" method="post" onsubmit="return processForm(this)">
                 <select name="option1">
-                        <option selected disabled>Select by Field Number...</option>
-                    {% for field in fields %}
-                        <option value="{{field.field_id}}">Field {{ field.field_id }}</option>
-                    {% endfor %}
-                </select>
-                <select name="option2">
                         <option selected disabled>Select by Field Owner...</option>
                     {% for field in fields %}
                         <option value="{{field.owner}}">{{ field.owner }}</option>
                     {% endfor %}
                 </select>
-                <select name="option3">
+                <select name="option2">
                         <option selected disabled>Select by Crop Type...</option>
                     {% for crop in crops %}
                         <option value="{{crop.name}}">{{ crop.name }}</option>
                     {% endfor %}
                 </select>
-                <select name="option4">
+                <select name="option3">
                         <option selected disabled>Select by Find Class...</option>
                     {% for cls in classes %}
                         <option value="{{cls.name}}">{{ cls.name }}</option>
                     {% endfor %}
                 </select>
-                <input type="submit">
+                <input type="reset" value="Reset Form" onclick="resetForm(this)">
+                <input type="submit" value="Submit">
             </form>
         </div>
 
@@ -125,14 +120,14 @@
     function processForm(f){
         console.log(f)
 
-        let field_id = "field".concat(f.option1.value);
-        let field_owner = f.option2.value;
-        let crop_name = f.option3.value;
-        let class_name = f.option4.value;
+        // let field_id = "field".concat(f.option1.value);
+        let field_owner = f.option1.value;
+        let crop_name = f.option2.value;
+        let class_name = f.option3.value;
 
-        console.log(field_id,field_owner,crop_name,class_name)
+        console.log(field_owner,crop_name,class_name)
 
-        var chosen_field = document.getElementById(field_id)
+        // var chosen_field = document.getElementById(field_id)
 
         var all_rows = document.getElementById("field_table1")
 
@@ -144,8 +139,10 @@
             console.log("Testingg against...", owner_elements[i].outerText.toUpperCase())
             console.log("field_owner is ", field_owner)
             if(owner_elements[i].outerText.toUpperCase().trim() == field_owner.trim()) {
-                  owner_elements[i].parentElement.setAttribute("class", "field_selected");
-                  console.log("Went through the if...");
+                  owner_elements[i].parentElement.setAttribute("class", "");
+                  var parent_id = owner_elements[i].parentElement.getAttribute("id").split('_')[1];
+                  console.log("Parent id: ", parent_id)
+                  toggleFieldHighlight(parent_id);
             } else {
                   console.log("went to the else...");
             }
@@ -155,19 +152,23 @@
             console.log("Testing against...", crop_elements[i].outerText.toUpperCase())
             console.log("crop_name is ", crop_name)
             if(crop_elements[i].outerText.toUpperCase().trim() == crop_name.trim()) {
-                  crop_elements[i].parentElement.setAttribute("class", "field_selected");
-                  console.log("Went through the croppy if...");
+                  crop_elements[i].parentElement.setAttribute("class", "");
+                  var parent_id = crop_elements[i].parentElement.getAttribute("id").split('_')[1];
+                  console.log("Parent id croppy: ", parent_id)
+                  toggleFieldHighlight(parent_id);
             } else {
                   console.log("went to the croppy else...");
             }
         }
 
         for (i=0; i < class_elements.length; i++){
-            console.log("Testing against...", class_elements[i].outerText.toUpperCase())
-            console.log("class_name is ", class_name)
+            //console.log("Testing against...", class_elements[i].outerText.toUpperCase())
+            //console.log("class_name is ", class_name)
             if(class_elements[i].outerText.toUpperCase().trim() == class_name.trim()) {
-                  class_elements[i].parentElement.setAttribute("class", "find_selected");
-                  console.log("Went through the classy if...");
+                  class_elements[i].parentElement.setAttribute("class", "");
+                  var parent_id = class_elements[i].parentElement.getAttribute("id").split('_')[1];
+                  console.log("Parent id classy: ", parent_id)
+                  toggleFindHighlight(parent_id);
             } else {
                   console.log("went to the classy else...");
             }
@@ -192,8 +193,44 @@
     }
 
 
+    function resetForm(this_form){
+        document.getElementById("main_form").reset();
+        console.log("Resetting the form....")
+
+        //  Get all the visible field and find table rows and store in 2 variables
+        var field_tablerow_elements = document.querySelectorAll('tr[class=""]');
+        var find_tablerow_elements = document.querySelectorAll('tr[class=""]');
+
+        //  Get all the selected field and find SVG rectangles and circles on the map, and store in 2 variables
+        var selected_fields = document.querySelectorAll('rect[class^="field_selected"]')
+        var selected_finds = document.querySelectorAll('circle[class^="find_selected"]')
+
+        console.log("field_tablerow_elements: ", field_tablerow_elements)
+        console.log("find_tablerow_elements: ", find_tablerow_elements)
+
+        //  Loop through all visible field table rows and reset to hidden
+        for (i=0; i<field_tablerow_elements.length; i++){
+            console.log(field_tablerow_elements[i])
+            field_tablerow_elements[i].setAttribute("class", "hidden")
+        }
+        //  Loop through all visible find table rows and reset to hidden
+        for (i=0; i<find_tablerow_elements.length; i++){
+            console.log(find_tablerow_elements[i])
+            find_tablerow_elements[i].setAttribute("class", "hidden")
+        }
+        //  Loop through selected fields on the map, and reset to unselected state
+        for (i=0; i<selected_fields.length; i++){
+            console.log(selected_fields[i])
+            selected_fields[i].setAttribute("class", "field")
+        }
+        //  Loop through selected finds on the map, and reset to unselected state
+        for (i=0; i<selected_finds.length; i++){
+            console.log(selected_finds[i])
+            selected_finds[i].setAttribute("class", "find")
+        }
 
 
+    }
 
 
     function setFieldSelected(id){
@@ -210,6 +247,29 @@
             trow.setAttribute("class", "");
         }
     }
+
+    function toggleFieldHighlight(field_id){
+        console.log(field_id)
+        field = document.getElementById(field_id)
+        if (field.getAttribute("class") == "field_selected") {
+            field.setAttribute("class", "field");
+        } else {
+            field.setAttribute("class", "field_selected");
+        }
+    }
+
+
+    function toggleFindHighlight(find_id){
+        console.log(find_id)
+        find = document.getElementById(find_id)
+        if (find.getAttribute("class") == "find_selected") {
+            find.setAttribute("class", "find");
+        } else {
+            find.setAttribute("class", "find_selected");
+        }
+    }
+
+
 
     function setFindSelected(id){
         console.log(id)
