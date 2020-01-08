@@ -10,8 +10,10 @@ cgitb.enable(format='text')
 class GraphicsArea:
 
     def __init__(self, width, height, viewBox_x, viewBox_y, viewBox_width, viewBox_height):
-        self.width = f"{width}cm"
-        self.height = f"{height}cm"
+        #self.width = f"{width}cm"
+        #self.height = f"{height}cm"
+        self.width = "480px"
+        self.height = "640px"
         self.viewBox_x = viewBox_x
         self.viewBox_y = viewBox_y
         self.viewBox_width = viewBox_width
@@ -146,6 +148,12 @@ def get_class_name(my_class, find_type):
         else:
             continue
 
+def get_unique_owners(fields):
+    unique = []
+    for field in fields:
+        if field.owner not in unique:
+            unique.append(field.owner)
+    return unique
 
 def print_svg(width, height, viewbox):
     return f'<svg width="{width}" height="{height}" viewBox="{viewbox}">'
@@ -229,7 +237,7 @@ def assign_class_names(finds, classes):
 def render_html():
     env = Environment(loader=FileSystemLoader('.'))
     temp = env.get_template('index.html')
-    print(temp.render(fields=field_objects, finds=find_objects, classes=my_classes, crops=my_crops, g=graphics_area_for_svg))
+    print(temp.render(fields=field_objects, finds=find_objects, classes=my_classes, crops=my_crops, g=graphics_area_for_svg, unique_owners=unique_owners))
 
 
 if __name__ == '__main__':
@@ -245,6 +253,7 @@ if __name__ == '__main__':
     assign_find_colours(find_objects, my_classes)
     assign_crop_names(field_objects, my_crops)
     assign_class_names(find_objects, my_classes)
+    unique_owners = get_unique_owners(field_objects)
 
     graphics_area_for_svg = GraphicsArea(15, 15, -1, 1, 16, 18)
 

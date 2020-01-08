@@ -8,51 +8,51 @@
   </head>
   <body>
     <div class="content">
-      <h1 id="main_title"> Archaeological Finds </h1>
-        <div class="row">
-            <p>Select items matching the following criteria:</p>
-            <form id="main_form" name="main_form" action="#" method="post" onsubmit="return processForm(this)">
-                <select name="option1">
-                        <option selected disabled>Select by Field Owner...</option>
-                    {% for field in fields %}
-                        <option value="{{field.owner}}">{{ field.owner }}</option>
-                    {% endfor %}
-                </select>
-                <select name="option2">
-                        <option selected disabled>Select by Crop Type...</option>
-                    {% for crop in crops %}
-                        <option value="{{crop.name}}">{{ crop.name }}</option>
-                    {% endfor %}
-                </select>
-                <select name="option3">
-                        <option selected disabled>Select by Find Class...</option>
-                    {% for cls in classes %}
-                        <option value="{{cls.name}}">{{ cls.name }}</option>
-                    {% endfor %}
-                </select>
-                <input type="reset" value="Reset Form" onclick="resetForm(this)">
-                <input type="submit" value="Submit">
-            </form>
+        <div class="row header">
+            <h1 id="main_title"> Archaeological Finds </h1>
         </div>
-
 
         <div class="row">
             <div class="column left">
                 <svg width="{{ g.width }}" height="{{ g.height }}" viewBox="{{ g.viewBox_custom }}">
                     <g id="draw_svg" transform="scale(1,-1) translate(0, -{{ g.viewBox_height }})">
+
+                        <!-- Draw the backgrond grid for the field and find map -->
+                        <pattern id="smallGrid" width="0.25" height="0.25" patternUnits="userSpaceOnUse">
+                            <path d="M 1 0 L 0 0 0 1" fill="none" stroke="#e3effc" stroke-width="0.04"/>
+                        </pattern>
+                        <pattern id="grid" width="1" height="1" patternUnits="userSpaceOnUse">
+                            <rect width="13" height="17" fill="url(#smallGrid)"/>
+                            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#ccddf0" stroke-width="0.1"/>
+                        </pattern>
+                        <rect width="13.03" height="17.03" fill="url(#grid)" />
+
+                        <!-- Loop through the fields and draw the SVG rectangle for each -->
                         {% for field in fields %}
                             <rect class="field" id="field{{ field.field_id }}" onclick="setFieldSelected(this)" x="{{ field.lowx }}" y="{{ field.lowy }}" width="{{ field.width }}" height="{{ field.height }}" fill="{{ field.fill }}" stroke="black"/>
                         {% endfor %}
+                        <!-- Loop through the finds and draw the SVG circle for each -->
                         {% for find in finds %}
                             <circle class="find" id="find{{ find.find_id }}" onclick="setFindSelected(this)" cx = "{{ find.xcoord }}" cy="{{ find.ycoord }}" r="0.4" fill="{{ find.fill }}"/>
                         {% endfor %}
                     </g>
-                    <g id="text_numbers">
-                        {% for field in fields %}
-                            <text id="text_field{{ field.field_id }}" class="field_number" transform="translate(-0.2, 0)" x="{{ field.centroidx }}" y="{{ g.viewBox_height-field.centroidy }}" font-family="Verdana" font-size="0.5" fill="black">{{field.field_id}}</text>
+                    <g id="axes">
+                        {% for x in range(g.viewBox_width-2) %}
+                        <text class="x_axis_label" transform="translate(-0.1, 0)" x="{{ x }}" y="{{ g.viewBox_height + 0.5 }}" fill="gray" font-size="0.3">{{ x }}</text>
                         {% endfor %}
+                        {% for y in range(g.viewBox_height) %}
+                        <text class="y_axis_label" transform="translate(0, 0.1)" x="{{ -0.7 }}" y="{{ g.viewBox_height-y }}" fill="gray" font-size="0.3">{{ y }}</text>
+                        {% endfor %}
+
+                    </g>
+                    <g id="text_numbers">
+                        <!-- Loop through the fields and render the numbers identifying each -->
+                        {% for field in fields %}
+                            <text id="text_field{{ field.field_id }}" class="field_number" transform="translate(-0.2, 0)" x="{{ field.centroidx }}" y="{{ g.viewBox_height-field.centroidy }}" font-size="0.5">{{field.field_id}}</text>
+                        {% endfor %}
+                        <!-- Loop through the finds and render the numbers identifying each -->
                         {% for find in finds %}
-                            <text id="text_find{{ find.find_id }}" class="find_number" onclick="setFindSelected(find{{ find.find_id }})" transform="translate(-0.15, 0.2)" x="{{ find.xcoord }}" y="{{ g.viewBox_height-find.ycoord }}" font-family="Verdana" font-size="0.5" fill="white">{{find.find_id}}</text>
+                            <text id="text_find{{ find.find_id }}" class="find_number" onclick="setFindSelected(find{{ find.find_id }})" transform="translate(-0.15, 0.2)" x="{{ find.xcoord }}" y="{{ g.viewBox_height-find.ycoord }}" font-size="0.5">{{find.find_id}}</text>
                         {% endfor %}
                     </g>
                 </svg>
@@ -113,6 +113,33 @@
                     </table><br>
                 </div>
             </div>
+        </div>
+        <div class="row">
+            <p>Select items matching the following criteria:</p>
+            <form id="main_form" name="main_form" action="#" method="post" onsubmit="return processForm(this)">
+                <select class="dropdown" name="option1">
+                        <option selected disabled>Select by Field Owner...</option>
+                    {% for owner in unique_owners %}
+                        <option value="{{owner}}">{{ owner.title() }}</option>
+                    {% endfor %}
+                </select>
+                <select class="dropdown" name="option2">
+                        <option selected disabled>Select by Crop Type...</option>
+                    {% for crop in crops %}
+                        <option value="{{crop.name}}">{{ crop.name.title() }}</option>
+                    {% endfor %}
+                </select>
+                <select class="dropdown" name="option3">
+                        <option selected disabled>Select by Find Class...</option>
+                    {% for cls in classes %}
+                        <option value="{{cls.name}}">{{ cls.name.title() }}</option>
+                    {% endfor %}
+                </select>
+                <input class="radio_button" type="radio" name="and_or" id="select_and" value="ALL">Match ALL criteria<br>
+                <input class="radio_button" type="radio" name="and_or" id="select_or" value="ANY">Match ANY criteria<br>
+                <input class="button_right" type="reset" value="Reset All..." onclick="resetForm(this)">
+                <input class="button_right" type="submit" value="Submit">
+            </form>
         </div>
     </div>
     <script>
