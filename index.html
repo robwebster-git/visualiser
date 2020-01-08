@@ -248,29 +248,6 @@
         }
     }
 
-    function toggleFieldHighlight(field_id){
-        console.log(field_id)
-        field = document.getElementById(field_id)
-        if (field.getAttribute("class") == "field_selected") {
-            field.setAttribute("class", "field");
-        } else {
-            field.setAttribute("class", "field_selected");
-        }
-    }
-
-
-    function toggleFindHighlight(find_id){
-        console.log(find_id)
-        find = document.getElementById(find_id)
-        if (find.getAttribute("class") == "find_selected") {
-            find.setAttribute("class", "find");
-        } else {
-            find.setAttribute("class", "find_selected");
-        }
-    }
-
-
-
     function setFindSelected(id){
         console.log(id)
         var trow_id = "tablerow_".concat(id.id)
@@ -285,6 +262,36 @@
             trow.setAttribute("class", "")
         }
     }
+
+    function toggleFieldHighlight(field_id){
+
+        //  Takes a field_id as an argument - if the field is selected, it unselects
+        //  If the field is unselected, it will select it.  This is done by changing
+        //  the classes between "field" and "field_selected" as necessary
+
+        field = document.getElementById(field_id)
+        if (field.getAttribute("class") == "field_selected") {
+            field.setAttribute("class", "field");
+        } else {
+            field.setAttribute("class", "field_selected");
+        }
+    }
+
+
+    function toggleFindHighlight(find_id){
+
+        //  Takes a find_id as an argument - if the find is selected, it unselects
+        //  If the find is unselected, it will select it.  This is done by changing
+        //  the classes between "find" and "find_selected" as necessary
+
+        find = document.getElementById(find_id)
+        if (find.getAttribute("class") == "find_selected") {
+            find.setAttribute("class", "find");
+        } else {
+            find.setAttribute("class", "find_selected");
+        }
+    }
+
 
     </script>
 
