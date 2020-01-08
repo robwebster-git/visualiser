@@ -1,0 +1,134 @@
+*{
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+}
+
+body {
+    font-family: "Lucida Sans Unicode", "Lucida Grande", "sans-serif";
+    font-size: 1em;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.content {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.row {
+
+
+}
+
+.column {
+  float: left;
+}
+
+.right {
+    width: 60%;
+}
+
+.left {
+    width: 40%;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table, th, td {
+    border: 1px solid #ddd;
+}
+
+th {
+    height: 50px;
+    text-align: center;
+    background-color: #4CAF50;
+    color: white;
+}
+
+th.field_number, th.area, th.crop_number {
+    width: 60px;
+}
+
+th.lower_left, th.upper_right {
+    width: 100px;
+}
+
+th.crop_name, th.find_class_name {
+    width: 120px;
+}
+
+th.find_number, th.x, th.y, th.find_type, th.depth {
+    width: 60px;
+}
+
+tr {
+    height: 25px;
+    padding: 5px;
+    font-size: 0.8em;
+}
+
+tr:hover {background-color: #f5f5f5;}
+
+h1 {
+    margin-bottom: 0.5rem;
+    color: black;
+}
+
+h2 {
+    margin-bottom: 0px;
+    color: black;
+    opacity: 50%;
+}
+
+.find {
+    cursor: pointer;
+    fill-opacity: 100%;
+    stroke: black;
+    stroke-width: 0.02;
+}
+
+.find_selected {
+    cursor: pointer;
+    fill-opacity: 100%;
+    stroke: red;
+    stroke-width: 0.1;
+}
+
+.field {
+    cursor: pointer;
+    fill-opacity: 20%;
+    stroke-width: 0.04;
+    stroke: black;
+}
+
+.field_selected {
+    cursor: pointer;
+    fill-opacity: 100%;
+    stroke-width: 0.1;
+    stroke: blue;
+}
+
+.field_number, .find_number {
+    cursor: pointer;
+}
+
+.field_number {
+    font-family: Verdana;
+    font-size: 0.5;
+    fill: black;
+}
+
+.find_number {
+  font-family: Verdana;
+  font-size: 0.5;
+  fill: white;
+}
+
+.hidden {
+    display: none;
+}

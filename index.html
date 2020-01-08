@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <link rel="stylesheet" href="../../style.css">
+      <title>Database Visualiser</title>
+  </head>
+  <body>
+    <div class="content">
+      <h1 id="main_title"> Archaeological Finds </h1>
+        <div class="row">
+            <p>Select items matching the following criteria:</p>
+            <form name="select_form" action="#" method="post" onsubmit="return processForm(this)">
+                <select name="option1">
+                        <option selected disabled>Select by Field Number...</option>
+                    {% for field in fields %}
+                        <option value="{{field.field_id}}">Field {{ field.field_id }}</option>
+                    {% endfor %}
+                </select>
+                <select name="option2">
+                        <option selected disabled>Select by Field Owner...</option>
+                    {% for field in fields %}
+                        <option value="{{field.owner}}">{{ field.owner }}</option>
+                    {% endfor %}
+                </select>
+                <select name="option3">
+                        <option selected disabled>Select by Crop Type...</option>
+                    {% for crop in crops %}
+                        <option value="{{crop.name}}">{{ crop.name }}</option>
+                    {% endfor %}
+                </select>
+                <select name="option4">
+                        <option selected disabled>Select by Find Class...</option>
+                    {% for cls in classes %}
+                        <option value="{{cls.name}}">{{ cls.name }}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit">
+            </form>
+        </div>
+
+
+        <div class="row">
+            <div class="column left">
+                <svg width="{{ g.width }}" height="{{ g.height }}" viewBox="{{ g.viewBox_custom }}">
+                    <g id="draw_svg" transform="scale(1,-1) translate(0, -{{ g.viewBox_height }})">
+                        {% for field in fields %}
+                            <rect class="field" id="field{{ field.field_id }}" onclick="setFieldSelected(this)" x="{{ field.lowx }}" y="{{ field.lowy }}" width="{{ field.width }}" height="{{ field.height }}" fill="{{ field.fill }}" stroke="black"/>
+                        {% endfor %}
+                        {% for find in finds %}
+                            <circle class="find" id="find{{ find.find_id }}" onclick="setFindSelected(this)" cx = "{{ find.xcoord }}" cy="{{ find.ycoord }}" r="0.4" fill="{{ find.fill }}"/>
+                        {% endfor %}
+                    </g>
+                    <g id="text_numbers">
+                        {% for field in fields %}
+                            <text id="text_field{{ field.field_id }}" class="field_number" transform="translate(-0.2, 0)" x="{{ field.centroidx }}" y="{{ g.viewBox_height-field.centroidy }}" font-family="Verdana" font-size="0.5" fill="black">{{field.field_id}}</text>
+                        {% endfor %}
+                        {% for find in finds %}
+                            <text id="text_find{{ find.find_id }}" class="find_number" onclick="setFindSelected(find{{ find.find_id }})" transform="translate(-0.15, 0.2)" x="{{ find.xcoord }}" y="{{ g.viewBox_height-find.ycoord }}" font-family="Verdana" font-size="0.5" fill="white">{{find.find_id}}</text>
+                        {% endfor %}
+                    </g>
+                </svg>
+
+            </div>
+            <div class="column right">
+                <br>
+                <br>
+                <div class="field_table" id="field_table1">
+                        <h2>Field Information</h2>
+                        <table>
+                            <tr>
+                                <th>Field Number</th>
+                                <th>Owner</th>
+                                <th>Lower Left Coordinate</th>
+                                <th>Upper Right Coordinate</th>
+                                <th>Area</th>
+                                <th>Crop Number</th>
+                                <th>Crop Name</th>
+
+                            </tr>
+                            {% for field in fields %}
+                                <tr class="hidden" id="tablerow_field{{field.field_id}}">
+                                    <td class="field_number"> {{field.field_id}} </td>
+                                    <td class="owner"> {{field.owner.title()}}</td>
+                                    <td class="lower_left"> {{field.lowx}}, {{field.lowy}} </td>
+                                    <td class="upper_right"> {{field.hix}}, {{field.hiy}} </td>
+                                    <td class="area"> {{field.area}} </td>
+                                    <td class="crop_number"> {{field.crop_id}}</td>
+                                    <td class="crop_name" style="background-color:{{field.fill}}"> {{field.crop_name.title()}}</td>
+                                </tr>
+                            {% endfor %}
+                        </table><br>
+                </div>
+               <div class="find_table" id="find_table1">
+                <h2>Find Information</h2>
+                    <table>
+                        <tr>
+                            <th>Find Number</th>
+                            <th>X</th>
+                            <th>Y</th>
+                            <th>Type</th>
+                            <th>Class</th>
+                            <th>Depth</th>
+                            <th>Field Notes</th>
+                        </tr>
+                        {% for find in finds %}
+                            <tr class="hidden" id="tablerow_find{{find.find_id}}">
+                                <td class="find_number"> {{find.find_id}} </td>
+                                <td class="x"> {{find.xcoord}} </td>
+                                <td class="y"> {{find.ycoord}} </td>
+                                <td class="find_type"> {{find.find_type}} </td>
+                                <td class="find_class_name" style="background-color:{{find.fill}}"> {{find.class_name.title()}} </td>
+                                <td class="depth"> {{find.depth}} </td>
+                                <td class="field_notes"> {{find.field_notes.title()}} </td>
+                            </tr>
+                        {% endfor %}
+                    </table><br>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+    function processForm(f){
+        console.log(f)
+
+        let field_id = "field".concat(f.option1.value);
+        let field_owner = f.option2.value;
+        let crop_name = f.option3.value;
+        let class_name = f.option4.value;
+
+        console.log(field_id,field_owner,crop_name,class_name)
+
+        var chosen_field = document.getElementById(field_id)
+
+        var all_rows = document.getElementById("field_table1")
+
+        var owner_elements = document.querySelectorAll('td[class^="owner"]');
+        var crop_elements = document.querySelectorAll('td[class^="crop_name"]');
+        var class_elements = document.querySelectorAll('td[class^="find_class_name"]');
+
+        for (i=0; i < owner_elements.length; i++){
+            console.log("Testingg against...", owner_elements[i].outerText.toUpperCase())
+            console.log("field_owner is ", field_owner)
+            if(owner_elements[i].outerText.toUpperCase().trim() == field_owner.trim()) {
+                  owner_elements[i].parentElement.setAttribute("class", "field_selected");
+                  console.log("Went through the if...");
+            } else {
+                  console.log("went to the else...");
+            }
+        }
+
+        for (i=0; i < crop_elements.length; i++){
+            console.log("Testing against...", crop_elements[i].outerText.toUpperCase())
+            console.log("crop_name is ", crop_name)
+            if(crop_elements[i].outerText.toUpperCase().trim() == crop_name.trim()) {
+                  crop_elements[i].parentElement.setAttribute("class", "field_selected");
+                  console.log("Went through the croppy if...");
+            } else {
+                  console.log("went to the croppy else...");
+            }
+        }
+
+        for (i=0; i < class_elements.length; i++){
+            console.log("Testing against...", class_elements[i].outerText.toUpperCase())
+            console.log("class_name is ", class_name)
+            if(class_elements[i].outerText.toUpperCase().trim() == class_name.trim()) {
+                  class_elements[i].parentElement.setAttribute("class", "find_selected");
+                  console.log("Went through the classy if...");
+            } else {
+                  console.log("went to the classy else...");
+            }
+        }
+
+        console.log("All Rows: ", all_rows)
+        console.log("Elements: ", class_elements)
+        console.log("Element[0].owner: ", class_elements[0].outerText)
+        console.log("elements[0].parentElement: ", class_elements[0].parentElement.parentElement)
+        // var chosen_owner = document.getElementById(field_owner)
+        //var chosen_crop = document.getElementById(crop_name)
+        //var chosen_class = document.getElementById(class_name)
+
+        //chosen_field.setAttribute("class", "field_selected")
+        //if (field_id !== null){setFieldSelected(chosen_field)}
+        //chosen_owner.setAttribute("class", "")
+        //chosen_crop.setAttribute("class", "")
+        //chosen_class.setAttribute("class", "")
+        // console.log(chosen_field, chosen_owner, chosen_crop, chosen_class);
+
+        return false
+    }
+
+
+
+
+
+
+    function setFieldSelected(id){
+        console.log(id)
+        var trow_id = "tablerow_".concat(id.id)
+        console.log(trow_id)
+        var trow = document.getElementById(trow_id)
+        console.log(trow)
+        if (id.getAttribute("class") == "field_selected") {
+            id.setAttribute("class", "field");
+            trow.setAttribute("class", "hidden");
+        } else {
+            id.setAttribute("class", "field_selected");
+            trow.setAttribute("class", "");
+        }
+    }
+
+    function setFindSelected(id){
+        console.log(id)
+        var trow_id = "tablerow_".concat(id.id)
+        console.log(trow_id)
+        var trow = document.getElementById(trow_id)
+        console.log(trow)
+        if (id.getAttribute("class") == "find_selected") {
+            id.setAttribute("class", "find");
+            trow.setAttribute("class", "hidden");
+        } else {
+            id.setAttribute("class", "find_selected");
+            trow.setAttribute("class", "")
+        }
+    }
+
+    </script>
+
+  </body>
+</html>
