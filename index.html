@@ -8,13 +8,12 @@
   </head>
   <body>
     <div class="content">
-        <div class="row header">
-            <h1 id="main_title"> Archaeological Finds </h1>
+        <div class="header">
+            <h1 id="main_title">Archaeo Logical</h1>
         </div>
-
-        <div class="row">
-            <div class="column left">
-                <svg width="{{ g.width }}" height="{{ g.height }}" viewBox="{{ g.viewBox_custom }}">
+            <div class="column-map">
+                <!--<svg width="{{ g.width }}" height="{{ g.height }}" viewBox="{{ g.viewBox_custom }}">-->
+                <svg width="100%" height="100%" viewBox="{{ g.viewBox_custom }}">
                     <g id="draw_svg" transform="scale(1,-1) translate(0, -{{ g.viewBox_height }})">
 
                         <!-- Draw the backgrond grid for the field and find map -->
@@ -25,7 +24,7 @@
                             <rect width="13" height="17" fill="url(#smallGrid)"/>
                             <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#ccddf0" stroke-width="0.1"/>
                         </pattern>
-                        <rect width="13.03" height="17.03" fill="url(#grid)" />
+                        <rect class="rect-grid" width="13.03" height="17.03" fill="url(#grid)" />
 
                         <!-- Loop through the fields and draw the SVG rectangle for each -->
                         {% for field in fields %}
@@ -56,9 +55,10 @@
                         {% endfor %}
                     </g>
                 </svg>
+                <input type="button" name="clear_map" value="Clear Map" onclick="clearMap()">
 
             </div>
-            <div class="column right">
+            <div class="column-table">
                 <br>
                 <br>
                 <div class="field_table" id="field_table1">
@@ -67,8 +67,8 @@
                             <tr>
                                 <th>Field Number</th>
                                 <th>Owner</th>
-                                <th>Lower Left Coordinate</th>
-                                <th>Upper Right Coordinate</th>
+                                <th>Lower Left</th>
+                                <th>Upper Right</th>
                                 <th>Area</th>
                                 <th>Crop Number</th>
                                 <th>Crop Name</th>
@@ -113,8 +113,7 @@
                     </table><br>
                 </div>
             </div>
-        </div>
-        <div class="row">
+        <div class="column-form">
             <p>Select items matching the following criteria:</p>
             <form id="main_form" name="main_form" action="#" method="post" onsubmit="return processForm(this)">
                 <select class="dropdown" name="option1">
@@ -136,7 +135,7 @@
                     {% endfor %}
                 </select>
                 <input class="radio_button" type="radio" name="and_or" id="select_and" value="ALL">Match ALL criteria<br>
-                <input class="radio_button" type="radio" name="and_or" id="select_or" value="ANY">Match ANY criteria<br>
+                <input class="radio_button" type="radio" name="and_or" id="select_or" checked value="ANY">Match ANY criteria<br>
                 <input class="button_right" type="reset" value="Reset All..." onclick="resetForm(this)">
                 <input class="button_right" type="submit" value="Submit">
             </form>
@@ -144,23 +143,68 @@
     </div>
     <script>
 
+    function clearMap() {
+        var selected_fields = document.querySelectorAll('rect[class^="field_selected"]')
+        var selected_finds = document.querySelectorAll('circle[class^="find_selected"]')
+
+        //  Loop through selected fields on the map, and reset to unselected state
+        for (i=0; i<selected_fields.length; i++){
+            console.log(selected_fields[i])
+            selected_fields[i].setAttribute("class", "field")
+        }
+        //  Loop through selected finds on the map, and reset to unselected state
+        for (i=0; i<selected_finds.length; i++){
+            console.log(selected_finds[i])
+            selected_finds[i].setAttribute("class", "find")
+        }
+    }
+
+    function clearTables() {
+        //  Get all the visible field and find table rows and store in 2 variables
+        var field_tablerow_elements = document.querySelectorAll('tr[class=""]');
+        var find_tablerow_elements = document.querySelectorAll('tr[class=""]');
+
+        console.log("field_tablerow_elements: ", field_tablerow_elements)
+        console.log("find_tablerow_elements: ", find_tablerow_elements)
+
+        //  Loop through all visible field table rows and reset to hidden
+        for (i=0; i<field_tablerow_elements.length; i++){
+            console.log(field_tablerow_elements[i])
+            field_tablerow_elements[i].setAttribute("class", "hidden")
+        }
+        //  Loop through all visible find table rows and reset to hidden
+        for (i=0; i<find_tablerow_elements.length; i++){
+            console.log(find_tablerow_elements[i])
+            find_tablerow_elements[i].setAttribute("class", "hidden")
+        }
+    }
+
+    function processFormAnd() {
+
+    }
+
+    function processFormAny() {
+
+    }
+
     function processForm(f){
         console.log(f)
-
-        // let field_id = "field".concat(f.option1.value);
+        clearMap()
+        //  Set the following variables to the options chosen by the user
         let field_owner = f.option1.value;
         let crop_name = f.option2.value;
         let class_name = f.option3.value;
 
-        console.log(field_owner,crop_name,class_name)
+        //  Store the state of the radio button in a variable (either 'ALL' or 'ANY')
+        let radio_select = f.and_or.value;
 
-        // var chosen_field = document.getElementById(field_id)
-
-        var all_rows = document.getElementById("field_table1")
+        console.log("State of radio button (f.and_or.value): ", radio_select)
 
         var owner_elements = document.querySelectorAll('td[class^="owner"]');
         var crop_elements = document.querySelectorAll('td[class^="crop_name"]');
         var class_elements = document.querySelectorAll('td[class^="find_class_name"]');
+
+
 
         for (i=0; i < owner_elements.length; i++){
             console.log("Testingg against...", owner_elements[i].outerText.toUpperCase())
@@ -223,40 +267,8 @@
     function resetForm(this_form){
         document.getElementById("main_form").reset();
         console.log("Resetting the form....")
-
-        //  Get all the visible field and find table rows and store in 2 variables
-        var field_tablerow_elements = document.querySelectorAll('tr[class=""]');
-        var find_tablerow_elements = document.querySelectorAll('tr[class=""]');
-
-        //  Get all the selected field and find SVG rectangles and circles on the map, and store in 2 variables
-        var selected_fields = document.querySelectorAll('rect[class^="field_selected"]')
-        var selected_finds = document.querySelectorAll('circle[class^="find_selected"]')
-
-        console.log("field_tablerow_elements: ", field_tablerow_elements)
-        console.log("find_tablerow_elements: ", find_tablerow_elements)
-
-        //  Loop through all visible field table rows and reset to hidden
-        for (i=0; i<field_tablerow_elements.length; i++){
-            console.log(field_tablerow_elements[i])
-            field_tablerow_elements[i].setAttribute("class", "hidden")
-        }
-        //  Loop through all visible find table rows and reset to hidden
-        for (i=0; i<find_tablerow_elements.length; i++){
-            console.log(find_tablerow_elements[i])
-            find_tablerow_elements[i].setAttribute("class", "hidden")
-        }
-        //  Loop through selected fields on the map, and reset to unselected state
-        for (i=0; i<selected_fields.length; i++){
-            console.log(selected_fields[i])
-            selected_fields[i].setAttribute("class", "field")
-        }
-        //  Loop through selected finds on the map, and reset to unselected state
-        for (i=0; i<selected_finds.length; i++){
-            console.log(selected_finds[i])
-            selected_finds[i].setAttribute("class", "find")
-        }
-
-
+        clearMap();
+        clearTables();
     }
 
 
