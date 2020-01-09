@@ -35,6 +35,9 @@ class Field:
         self.owner = owner
         self.crop_id = crop_id
 
+        #  Derived Attributes
+        self.finds_in_this_field = []
+
         #  Attributes calculated from object properties
         self.width = hix - lowx
         self.height = hiy - lowy
@@ -61,6 +64,9 @@ class Find:
         self.depth = f"{depth:.2f}"
         self.field_notes = field_notes
         self.class_name = 'none'
+
+        # Derived Attributes
+        self.in_which_fields = []
 
         self.fill = get_find_colour(self.find_type)
 
@@ -103,6 +109,13 @@ class Crop:
 
     def __str__(self):
         return f"Crop # {self.crop} - {self.name}, Start of Season: {self.startseason}, End of Season: {self.endseason})"
+
+
+def get_which_finds(fields, finds):
+    for field in fields:
+        for find in finds:
+            if find.xcoord >= field.lowx and find.xcoord <= field.hix and find.ycoord >= field.lowy and find.ycoord <= field.hiy:
+                field.finds_in_this_field.append(find.find_id)
 
 
 def get_field_colour(field_crop):
@@ -254,6 +267,7 @@ if __name__ == '__main__':
     assign_crop_names(field_objects, my_crops)
     assign_class_names(find_objects, my_classes)
     unique_owners = get_unique_owners(field_objects)
+    get_which_finds(field_objects, find_objects)
 
     graphics_area_for_svg = GraphicsArea(15, 15, -1, 1, 16, 18)
 

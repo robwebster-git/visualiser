@@ -72,6 +72,7 @@
                                 <th>Area</th>
                                 <th>Crop Number</th>
                                 <th>Crop Name</th>
+                                <th>Finds in This Field</th>
 
                             </tr>
                             {% for field in fields %}
@@ -83,6 +84,7 @@
                                     <td class="area"> {{field.area}} </td>
                                     <td class="crop_number"> {{field.crop_id}}</td>
                                     <td class="crop_name" style="background-color:{{field.fill}}"> {{field.crop_name.title()}}</td>
+                                    <td class="finds_in_this_field"> {{field.finds_in_this_field}}</td>
                                 </tr>
                             {% endfor %}
                         </table><br>
@@ -179,36 +181,90 @@
         }
     }
 
-    function processFormAnd() {
-
-    }
-
-    function processFormAny() {
-
-    }
-
-    function processForm(f){
-        console.log(f)
-        clearMap()
-        //  Set the following variables to the options chosen by the user
-        let field_owner = f.option1.value;
-        let crop_name = f.option2.value;
-        let class_name = f.option3.value;
-
-        //  Store the state of the radio button in a variable (either 'ALL' or 'ANY')
-        let radio_select = f.and_or.value;
-
-        console.log("State of radio button (f.and_or.value): ", radio_select)
-
-        var owner_elements = document.querySelectorAll('td[class^="owner"]');
-        var crop_elements = document.querySelectorAll('td[class^="crop_name"]');
-        var class_elements = document.querySelectorAll('td[class^="find_class_name"]');
-
-
+    function processFormAll(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements) {
+        console.log("GOING THROUGH processFormAll....")
+        var owner_index;
+        var crop_index;
+        var class_index;
 
         for (i=0; i < owner_elements.length; i++){
+            if (owner_elements[i].outerText.toUpperCase().trim() == field_owner.trim()){
+              owner_index = i;
+            }
+        }
+
+        for (j=0; j < crop_elements.length; j++){
+            if (crop_elements[j].outerText.toUpperCase().trim() == crop_name.trim()){
+              crop_index = j;
+          }
+        }
+
+        for (k=0; k< class_elements.length; k++){
+            if (class_elements[k].outerText.toUpperCase().trim() == class_name.trim()){
+              class_index = k;
+            }
+        }
+
+        for (i=0; i < owner_elements.length; i++){
+          for (j=0; j < crop_elements.length; j++){
+            for (k=0; k< class_elements.length; k++){
+              if (owner_index == i && crop_index == j && class_index == k){
+                console.log("Found a match: ", owner_elements[owner_index], crop_elements[crop_index], class_elements[class_index]);
+              }
+            }
+          }
+        }
+      }
+
+/*
+
+                      owner_elements[i].parentElement.setAttribute("class", "");
+                      var owner_parent_id = owner_elements[i].parentElement.getAttribute("id").split('_')[1];
+                      console.log("Parent id: ", owner_parent_id)
+                      toggleFieldHighlight(owner_parent_id);
+                      crop_elements[j].parentElement.setAttribute("class", "");
+                      var crop_parent_id = crop_elements[j].parentElement.getAttribute("id").split('_')[1];
+                      console.log("Parent id croppy: ", crop_parent_id)
+                      toggleFieldHighlight(crop_parent_id);
+                      class_elements[k].parentElement.setAttribute("class", "");
+                      var class_parent_id = class_elements[k].parentElement.getAttribute("id").split('_')[1];
+                      console.log("Parent id classy: ", class_parent_id)
+                      toggleFindHighlight(class_parent_id);
+                } else {
+                      console.log("went to the else...");
+*/
+
+    function processFormAllOld(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements) {
+      console.log("GOING THROUGH processFormAll....")
+        for (i=0; i < owner_elements.length; i++){
+          for (j=0; j < crop_elements.length; j++){
+            for (k=0; k< class_elements.length; k++){
+              if((owner_elements[i].outerText.toUpperCase().trim() == field_owner.trim()) && (crop_elements[j].outerText.toUpperCase().trim() == crop_name.trim()) && (class_elements[k].outerText.toUpperCase().trim() == class_name.trim())) {
+                      owner_elements[i].parentElement.setAttribute("class", "");
+                      var owner_parent_id = owner_elements[i].parentElement.getAttribute("id").split('_')[1];
+                      console.log("Parent id: ", owner_parent_id)
+                      toggleFieldHighlight(owner_parent_id);
+                      crop_elements[j].parentElement.setAttribute("class", "");
+                      var crop_parent_id = crop_elements[j].parentElement.getAttribute("id").split('_')[1];
+                      console.log("Parent id croppy: ", crop_parent_id)
+                      toggleFieldHighlight(crop_parent_id);
+                      class_elements[k].parentElement.setAttribute("class", "");
+                      var class_parent_id = class_elements[k].parentElement.getAttribute("id").split('_')[1];
+                      console.log("Parent id classy: ", class_parent_id)
+                      toggleFindHighlight(class_parent_id);
+                } else {
+                      console.log("went to the else...");
+                }
+              }
+            }
+          }
+        }
+
+    function processFormAny(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements) {
+        console.log("GOING THROUGH processFormAny....")
+        for (i=0; i < owner_elements.length; i++){
             console.log("Testingg against...", owner_elements[i].outerText.toUpperCase())
-            console.log("field_owner is ", field_owner)
+            // console.log("field_owner is ", field_owner)
             if(owner_elements[i].outerText.toUpperCase().trim() == field_owner.trim()) {
                   owner_elements[i].parentElement.setAttribute("class", "");
                   var parent_id = owner_elements[i].parentElement.getAttribute("id").split('_')[1];
@@ -221,7 +277,7 @@
 
         for (i=0; i < crop_elements.length; i++){
             console.log("Testing against...", crop_elements[i].outerText.toUpperCase())
-            console.log("crop_name is ", crop_name)
+            // console.log("crop_name is ", crop_name)
             if(crop_elements[i].outerText.toUpperCase().trim() == crop_name.trim()) {
                   crop_elements[i].parentElement.setAttribute("class", "");
                   var parent_id = crop_elements[i].parentElement.getAttribute("id").split('_')[1];
@@ -243,9 +299,32 @@
             } else {
                   console.log("went to the classy else...");
             }
-        }
+      }
+    }
 
-        console.log("All Rows: ", all_rows)
+    function processForm(f){
+        console.log(f)
+        clearMap()
+        //  Set the following variables to the options chosen by the user
+        let field_owner = f.option1.value;
+        let crop_name = f.option2.value;
+        let class_name = f.option3.value;
+
+        //  Store the state of the radio button in a variable (either 'ALL' or 'ANY')
+        let radio_select = f.and_or.value;
+
+        console.log("State of radio button (f.and_or.value): ", radio_select)
+
+        var owner_elements = document.querySelectorAll('td[class^="owner"]');
+        var crop_elements = document.querySelectorAll('td[class^="crop_name"]');
+        var class_elements = document.querySelectorAll('td[class^="find_class_name"]');
+
+        if (radio_select == 'ALL') {processFormAll(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements)}
+        if (radio_select == 'ANY') {processFormAny(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements)}
+
+
+
+        // console.log("All Rows: ", all_rows)
         console.log("Elements: ", class_elements)
         console.log("Element[0].owner: ", class_elements[0].outerText)
         console.log("elements[0].parentElement: ", class_elements[0].parentElement.parentElement)
