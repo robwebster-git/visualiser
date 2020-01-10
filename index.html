@@ -4,14 +4,14 @@
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <link rel="stylesheet" href="../../style.css">
-      <title>Database Visualiser</title>
+      <title>ArchaeoLogic Database Visualiser</title>
   </head>
   <body>
     <div class="content">
         <div class="header">
-            <h1 id="main_title">Archaeo Logical</h1>
+            <h1 id="main_title">ArchaeoLogic</h1>
         </div>
-            <div class="column-map">
+          <div class="column-map">
                 <!--<svg width="{{ g.width }}" height="{{ g.height }}" viewBox="{{ g.viewBox_custom }}">-->
                 <svg width="100%" height="100%" viewBox="{{ g.viewBox_custom }}">
                     <g id="draw_svg" transform="scale(1,-1) translate(0, -{{ g.viewBox_height }})">
@@ -56,9 +56,99 @@
                     </g>
                 </svg>
                 <input type="button" name="clear_map" value="Clear Map" onclick="clearMap()">
-
+                <input type="button" name="clear_tables" value="Clear Tables" onclick="clearTables()">
+                <input class="button" type="reset" value="Reset Forms..." onclick="resetForms()">
             </div>
-            <div class="column-table">
+
+          <div class="column-form">
+              <p class="instructions_text">Basic Search - Select items matching the following criteria:</p>
+              <form id="main_form" name="main_form" action="#" method="post" onsubmit="return processForm(this)">
+                  <div class="form_elements">
+                      <fieldset class="selectors">
+                            <select class="dropdown" name="option1">
+                                  <option selected disabled>Field Owner...</option>
+                              {% for owner in unique_owners %}
+                                  <option value="{{owner}}">{{ owner.title() }}</option>
+                              {% endfor %}
+                            </select>
+                            <select class="dropdown" name="option2">
+                                    <option selected disabled>Crop Type...</option>
+                                {% for crop in crops %}
+                                    <option value="{{crop.name}}">{{ crop.name.title() }}</option>
+                                {% endfor %}
+                            </select>
+                      </fieldset>
+                    <!--  <fieldset class="selectors">
+                            <select class="dropdown" name="option3">
+                                  <option selected disabled>Select by Find Class...</option>
+                              {% for cls in classes %}
+                                  <option value="{{cls.name}}">{{ cls.name.title() }}</option>
+                              {% endfor %}
+                            </select>
+                      </fieldset> -->
+                  </div>
+                  <div>
+                      <fieldset class="buttons">
+                          <p class="instructions_text">Match...</p>
+                          <input class="radio_button" type="radio" name="and_or" id="select_or" checked value="ANY">Any<br>
+                          <input class="radio_button" type="radio" name="and_or" id="select_and" value="ALL">Both<br>
+                          <br>
+                          <input class="button_right" type="submit" value="Submit">
+                      </fieldset>
+                  </div>
+              </form>
+
+              <form id="spatial_form" name="spatial_form" action="#" method="post" onsubmit="return processSpatialForm(this)">
+                  <div class="form_elements">
+                    <br>
+                    <hr>
+                    <br>
+                    <p class="instructions_text">Spatial Search - Select finds within an area:</p>
+                      <fieldset class="selectors">
+                          <select class="dropdown" name="lowleftx">
+                                <option selected disabled>Lower Left X</option>
+                            {% for xcoord in range(0,max_find_coords[0]+1) %}
+                                <option value="{{xcoord}}">{{ xcoord }}</option>
+                            {% endfor %}
+                          </select>
+                          <select class="dropdown" name="lowlefty">
+                                <option selected disabled>Lower Left Y</option>
+                            {% for ycoord in range(0,max_find_coords[1]+1) %}
+                                <option value="{{ycoord}}">{{ ycoord }}</option>
+                            {% endfor %}
+                          </select>
+                      </fieldset>
+                      <fieldset class="selectors">
+                          <select class="dropdown" name="highrightx">
+                                <option selected disabled>Upper Right X</option>
+                            {% for xcoord in range(0,max_find_coords[0]+1) %}
+                                <option value="{{xcoord}}">{{ xcoord }}</option>
+                            {% endfor %}
+                          </select>
+                          <select class="dropdown" name="highrighty">
+                                <option selected disabled>Upper Right Y</option>
+                            {% for ycoord in range(0,max_find_coords[1]+1) %}
+                                <option value="{{ycoord}}">{{ ycoord }}</option>
+                            {% endfor %}
+                          </select>
+                      </fieldset>
+                      <br>
+                  </div>
+                  <div>
+                      <br>
+                      <fieldset class="buttons">
+                          <!--<input class="radio_button" type="radio" name="rectangle" id="select_and" checked value="rectangle">Search by Coordinates<br>
+                          <input class="radio_button" type="radio" name="circle" id="select_or" value="circle">Search by Radius<br> -->
+                          <br>
+                          <input class="button_right" type="submit" value="Submit">
+                      </fieldset>
+                  </div>
+              </form>
+
+
+          </div>
+
+          <div class="column-table">
                 <br>
                 <br>
                 <div class="field_table" id="field_table1">
@@ -72,7 +162,7 @@
                                 <th>Area</th>
                                 <th>Crop Number</th>
                                 <th>Crop Name</th>
-                                <th>Finds in This Field</th>
+                                <th>Contains Find(s)</th>
 
                             </tr>
                             {% for field in fields %}
@@ -84,7 +174,7 @@
                                     <td class="area"> {{field.area}} </td>
                                     <td class="crop_number"> {{field.crop_id}}</td>
                                     <td class="crop_name" style="background-color:{{field.fill}}"> {{field.crop_name.title()}}</td>
-                                    <td class="finds_in_this_field"> {{field.finds_in_this_field}}</td>
+                                    <td class="finds_in_this_field"> {% for find in field.finds_in_this_field %} ({{find}}) {% endfor %}</td>
                                 </tr>
                             {% endfor %}
                         </table><br>
@@ -99,51 +189,59 @@
                             <th>Type</th>
                             <th>Class</th>
                             <th>Depth</th>
+                            <th>Is In Field(s)</th>
                             <th>Field Notes</th>
                         </tr>
                         {% for find in finds %}
                             <tr class="hidden" id="tablerow_find{{find.find_id}}">
                                 <td class="find_number"> {{find.find_id}} </td>
-                                <td class="x"> {{find.xcoord}} </td>
-                                <td class="y"> {{find.ycoord}} </td>
+                                <td class="x" id="find{{find.find_id}}_xcoord"> {{find.xcoord}} </td>
+                                <td class="y" id="find{{find.find_id}}_ycoord"> {{find.ycoord}} </td>
                                 <td class="find_type"> {{find.find_type}} </td>
                                 <td class="find_class_name" style="background-color:{{find.fill}}"> {{find.class_name.title()}} </td>
                                 <td class="depth"> {{find.depth}} </td>
+                                <td class="in_which_fields">{% for field in find.in_which_fields %} ({{field}}) {% endfor %}</td>
                                 <td class="field_notes"> {{find.field_notes.title()}} </td>
                             </tr>
                         {% endfor %}
                     </table><br>
                 </div>
             </div>
-        <div class="column-form">
-            <p>Select items matching the following criteria:</p>
-            <form id="main_form" name="main_form" action="#" method="post" onsubmit="return processForm(this)">
-                <select class="dropdown" name="option1">
-                        <option selected disabled>Select by Field Owner...</option>
-                    {% for owner in unique_owners %}
-                        <option value="{{owner}}">{{ owner.title() }}</option>
-                    {% endfor %}
-                </select>
-                <select class="dropdown" name="option2">
-                        <option selected disabled>Select by Crop Type...</option>
-                    {% for crop in crops %}
-                        <option value="{{crop.name}}">{{ crop.name.title() }}</option>
-                    {% endfor %}
-                </select>
-                <select class="dropdown" name="option3">
-                        <option selected disabled>Select by Find Class...</option>
-                    {% for cls in classes %}
-                        <option value="{{cls.name}}">{{ cls.name.title() }}</option>
-                    {% endfor %}
-                </select>
-                <input class="radio_button" type="radio" name="and_or" id="select_and" value="ALL">Match ALL criteria<br>
-                <input class="radio_button" type="radio" name="and_or" id="select_or" checked value="ANY">Match ANY criteria<br>
-                <input class="button_right" type="reset" value="Reset All..." onclick="resetForm(this)">
-                <input class="button_right" type="submit" value="Submit">
-            </form>
-        </div>
+            <div class="header">
+                <br>
+                <p>designed by student number 9217953, january 2020</p>
+                <br>
+            </div>
     </div>
     <script>
+
+    function processSpatialForm(f) {
+      var lowleftx = f.lowleftx.value
+      var lowlefty = f.lowlefty.value
+      var highrightx = f.highrightx.value
+      var highrighty = f.highrighty.value
+
+      console.log("low left x :", lowleftx)
+      console.log("low left y :", lowlefty)
+      console.log("upper right x :", highrightx)
+      console.log("upper right y :", highrighty)
+
+      var find_x_elements = document.querySelectorAll('td[class^="x"]')
+      var find_y_elements = document.querySelectorAll('td[class^="y"]');
+
+      for (i=0; i < find_x_elements.length; i++) {
+          let x = parseInt(find_x_elements[i].innerText, 10);
+          let y = parseInt(find_y_elements[i].innerText, 10);
+          if ((x >= lowleftx) && (x <= highrightx) && (y >= lowlefty) && (y <= highrighty)){
+            var find_number = i+1;
+            var local_find_id = ("find").concat(find_number);
+            setSelectedFromFindID(local_find_id);
+            console.log("Find ", i+1 , "is in the search area and has find_id of ", local_find_id)
+          }
+       }
+       return false
+      }
+
 
     function clearMap() {
         var selected_fields = document.querySelectorAll('rect[class^="field_selected"]')
@@ -181,86 +279,34 @@
         }
     }
 
-    function processFormAll(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements) {
+    function processFormAll(field_owner, owner_elements, crop_name, crop_elements) {
         console.log("GOING THROUGH processFormAll....")
         var owner_index;
         var crop_index;
         var class_index;
 
-        for (i=0; i < owner_elements.length; i++){
-            if (owner_elements[i].outerText.toUpperCase().trim() == field_owner.trim()){
-              owner_index = i;
-            }
-        }
+        var all_field_rows = document.querySelectorAll('tr[id^="tablerow_field"]');
+        var all_find_rows = document.querySelectorAll('tr[id^="tablerow_find"]');
 
-        for (j=0; j < crop_elements.length; j++){
-            if (crop_elements[j].outerText.toUpperCase().trim() == crop_name.trim()){
-              crop_index = j;
-          }
-        }
-
-        for (k=0; k< class_elements.length; k++){
-            if (class_elements[k].outerText.toUpperCase().trim() == class_name.trim()){
-              class_index = k;
-            }
-        }
-
-        for (i=0; i < owner_elements.length; i++){
-          for (j=0; j < crop_elements.length; j++){
-            for (k=0; k< class_elements.length; k++){
-              if (owner_index == i && crop_index == j && class_index == k){
-                console.log("Found a match: ", owner_elements[owner_index], crop_elements[crop_index], class_elements[class_index]);
-              }
+        console.log("ALL FIELD ROWS", all_field_rows)
+        for (i=0; i < all_field_rows.length; i++) {
+            let this_field = ("field").concat(all_field_rows[i].children[0].innerText.trim());
+            let this_owner = all_field_rows[i].children[1].innerText.trim().toUpperCase();
+            let this_crop = all_field_rows[i].children[6].innerText.trim().toUpperCase();
+            let finds_in_this_field = all_field_rows[i].children[7].innerText.trim();
+            console.log(field_owner, crop_name)
+            console.log(this_field,this_owner,this_crop,finds_in_this_field);
+            if ((field_owner == this_owner) && (crop_name == this_crop)){
+              console.log("Match FOUND");
+              setSelectedFromFieldID(this_field);
+            } else {
+              console.log("NO MATCH")
             }
           }
-        }
-      }
+      return false;
+    }
 
-/*
-
-                      owner_elements[i].parentElement.setAttribute("class", "");
-                      var owner_parent_id = owner_elements[i].parentElement.getAttribute("id").split('_')[1];
-                      console.log("Parent id: ", owner_parent_id)
-                      toggleFieldHighlight(owner_parent_id);
-                      crop_elements[j].parentElement.setAttribute("class", "");
-                      var crop_parent_id = crop_elements[j].parentElement.getAttribute("id").split('_')[1];
-                      console.log("Parent id croppy: ", crop_parent_id)
-                      toggleFieldHighlight(crop_parent_id);
-                      class_elements[k].parentElement.setAttribute("class", "");
-                      var class_parent_id = class_elements[k].parentElement.getAttribute("id").split('_')[1];
-                      console.log("Parent id classy: ", class_parent_id)
-                      toggleFindHighlight(class_parent_id);
-                } else {
-                      console.log("went to the else...");
-*/
-
-    function processFormAllOld(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements) {
-      console.log("GOING THROUGH processFormAll....")
-        for (i=0; i < owner_elements.length; i++){
-          for (j=0; j < crop_elements.length; j++){
-            for (k=0; k< class_elements.length; k++){
-              if((owner_elements[i].outerText.toUpperCase().trim() == field_owner.trim()) && (crop_elements[j].outerText.toUpperCase().trim() == crop_name.trim()) && (class_elements[k].outerText.toUpperCase().trim() == class_name.trim())) {
-                      owner_elements[i].parentElement.setAttribute("class", "");
-                      var owner_parent_id = owner_elements[i].parentElement.getAttribute("id").split('_')[1];
-                      console.log("Parent id: ", owner_parent_id)
-                      toggleFieldHighlight(owner_parent_id);
-                      crop_elements[j].parentElement.setAttribute("class", "");
-                      var crop_parent_id = crop_elements[j].parentElement.getAttribute("id").split('_')[1];
-                      console.log("Parent id croppy: ", crop_parent_id)
-                      toggleFieldHighlight(crop_parent_id);
-                      class_elements[k].parentElement.setAttribute("class", "");
-                      var class_parent_id = class_elements[k].parentElement.getAttribute("id").split('_')[1];
-                      console.log("Parent id classy: ", class_parent_id)
-                      toggleFindHighlight(class_parent_id);
-                } else {
-                      console.log("went to the else...");
-                }
-              }
-            }
-          }
-        }
-
-    function processFormAny(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements) {
+    function processFormAny(field_owner, owner_elements, crop_name, crop_elements) {
         console.log("GOING THROUGH processFormAny....")
         for (i=0; i < owner_elements.length; i++){
             console.log("Testingg against...", owner_elements[i].outerText.toUpperCase())
@@ -269,7 +315,7 @@
                   owner_elements[i].parentElement.setAttribute("class", "");
                   var parent_id = owner_elements[i].parentElement.getAttribute("id").split('_')[1];
                   console.log("Parent id: ", parent_id)
-                  toggleFieldHighlight(parent_id);
+                  setSelectedFromFieldID(parent_id);
             } else {
                   console.log("went to the else...");
             }
@@ -282,33 +328,20 @@
                   crop_elements[i].parentElement.setAttribute("class", "");
                   var parent_id = crop_elements[i].parentElement.getAttribute("id").split('_')[1];
                   console.log("Parent id croppy: ", parent_id)
-                  toggleFieldHighlight(parent_id);
+                  setSelectedFromFieldID(parent_id);
             } else {
                   console.log("went to the croppy else...");
             }
         }
-
-        for (i=0; i < class_elements.length; i++){
-            //console.log("Testing against...", class_elements[i].outerText.toUpperCase())
-            //console.log("class_name is ", class_name)
-            if(class_elements[i].outerText.toUpperCase().trim() == class_name.trim()) {
-                  class_elements[i].parentElement.setAttribute("class", "");
-                  var parent_id = class_elements[i].parentElement.getAttribute("id").split('_')[1];
-                  console.log("Parent id classy: ", parent_id)
-                  toggleFindHighlight(parent_id);
-            } else {
-                  console.log("went to the classy else...");
-            }
       }
-    }
 
     function processForm(f){
         console.log(f)
         clearMap()
+        clearTables()
         //  Set the following variables to the options chosen by the user
         let field_owner = f.option1.value;
         let crop_name = f.option2.value;
-        let class_name = f.option3.value;
 
         //  Store the state of the radio button in a variable (either 'ALL' or 'ANY')
         let radio_select = f.and_or.value;
@@ -317,35 +350,17 @@
 
         var owner_elements = document.querySelectorAll('td[class^="owner"]');
         var crop_elements = document.querySelectorAll('td[class^="crop_name"]');
-        var class_elements = document.querySelectorAll('td[class^="find_class_name"]');
 
-        if (radio_select == 'ALL') {processFormAll(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements)}
-        if (radio_select == 'ANY') {processFormAny(field_owner, owner_elements, crop_name, crop_elements, class_name, class_elements)}
-
-
-
-        // console.log("All Rows: ", all_rows)
-        console.log("Elements: ", class_elements)
-        console.log("Element[0].owner: ", class_elements[0].outerText)
-        console.log("elements[0].parentElement: ", class_elements[0].parentElement.parentElement)
-        // var chosen_owner = document.getElementById(field_owner)
-        //var chosen_crop = document.getElementById(crop_name)
-        //var chosen_class = document.getElementById(class_name)
-
-        //chosen_field.setAttribute("class", "field_selected")
-        //if (field_id !== null){setFieldSelected(chosen_field)}
-        //chosen_owner.setAttribute("class", "")
-        //chosen_crop.setAttribute("class", "")
-        //chosen_class.setAttribute("class", "")
-        // console.log(chosen_field, chosen_owner, chosen_crop, chosen_class);
+        if (radio_select == 'ALL') {processFormAll(field_owner, owner_elements, crop_name, crop_elements)}
+        if (radio_select == 'ANY') {processFormAny(field_owner, owner_elements, crop_name, crop_elements)}
 
         return false
     }
 
-
-    function resetForm(this_form){
+    function resetForms(){
         document.getElementById("main_form").reset();
-        console.log("Resetting the form....")
+        document.getElementById("spatial_form").reset();
+        console.log("Resetting the forms....")
         clearMap();
         clearTables();
     }
@@ -379,6 +394,58 @@
             id.setAttribute("class", "find_selected");
             trow.setAttribute("class", "")
         }
+    }
+
+    function setSelectedFromFindID(find_id){
+        var trow_id = "tablerow_".concat(find_id)
+        console.log(trow_id);
+        var trow = document.getElementById(trow_id);
+        console.log(trow);
+        var this_find = document.getElementById(find_id);
+        console.log("This find", this_find);
+        console.log("class", this_find.getAttribute("class"));
+        this_find.setAttribute("class", "find_selected");
+        console.log("class", this_find.getAttribute("class"));
+        trow.setAttribute("class", "");
+    }
+
+    function setSelectedFromFieldID(field_id){
+        var trow_id = "tablerow_".concat(field_id)
+        console.log(trow_id);
+        var trow = document.getElementById(trow_id);
+        console.log(trow);
+        var this_field = document.getElementById(field_id);
+        console.log("This find", this_field);
+        console.log("class", this_field.getAttribute("class"));
+        this_field.setAttribute("class", "field_selected");
+        console.log("class", this_field.getAttribute("class"));
+        trow.setAttribute("class", "");
+    }
+
+    function setUnselectedFromFindID(find_id){
+        var trow_id = "tablerow_".concat(find_id)
+        console.log(trow_id);
+        var trow = document.getElementById(trow_id);
+        console.log(trow);
+        var this_find = document.getElementById(find_id);
+        console.log("This find", this_find);
+        console.log("class", this_find.getAttribute("class"));
+        this_find.setAttribute("class", "find");
+        console.log("class", this_find.getAttribute("class"));
+        trow.setAttribute("class", "");
+    }
+
+    function setUnselectedFromFieldID(field_id){
+        var trow_id = "tablerow_".concat(field_id)
+        console.log(trow_id);
+        var trow = document.getElementById(trow_id);
+        console.log(trow);
+        var this_field = document.getElementById(field_id);
+        console.log("This field", this_field);
+        console.log("class", this_field.getAttribute("class"));
+        this_field.setAttribute("class", "field");
+        console.log("class", this_field.getAttribute("class"));
+        trow.setAttribute("class", "hidden");
     }
 
     function toggleFieldHighlight(field_id){

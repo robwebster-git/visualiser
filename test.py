@@ -116,6 +116,7 @@ def get_which_finds(fields, finds):
         for find in finds:
             if find.xcoord >= field.lowx and find.xcoord <= field.hix and find.ycoord >= field.lowy and find.ycoord <= field.hiy:
                 field.finds_in_this_field.append(find.find_id)
+                find.in_which_fields.append(field.field_id)
 
 
 def get_field_colour(field_crop):
@@ -167,6 +168,17 @@ def get_unique_owners(fields):
         if field.owner not in unique:
             unique.append(field.owner)
     return unique
+
+def get_max_find_coordinates(finds):
+    max = [0,0]
+    for find in finds:
+        if find.xcoord > max[0]:
+            max[0] = find.xcoord
+        if find.ycoord > max[1]:
+            max[1] = find.ycoord
+
+    return max
+
 
 def print_svg(width, height, viewbox):
     return f'<svg width="{width}" height="{height}" viewBox="{viewbox}">'
@@ -250,7 +262,7 @@ def assign_class_names(finds, classes):
 def render_html():
     env = Environment(loader=FileSystemLoader('.'))
     temp = env.get_template('index.html')
-    print(temp.render(fields=field_objects, finds=find_objects, classes=my_classes, crops=my_crops, g=graphics_area_for_svg, unique_owners=unique_owners))
+    print(temp.render(fields=field_objects, finds=find_objects, classes=my_classes, crops=my_crops, g=graphics_area_for_svg, unique_owners=unique_owners, max_find_coords=max_find_coords))
 
 
 if __name__ == '__main__':
@@ -268,6 +280,7 @@ if __name__ == '__main__':
     assign_class_names(find_objects, my_classes)
     unique_owners = get_unique_owners(field_objects)
     get_which_finds(field_objects, find_objects)
+    max_find_coords = get_max_find_coordinates(find_objects)
 
     graphics_area_for_svg = GraphicsArea(15, 15, -1, 1, 16, 18)
 
