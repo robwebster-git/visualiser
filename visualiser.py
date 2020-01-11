@@ -12,14 +12,16 @@ class GraphicsArea:
     # Defines an area for SVG graphics to be rendered on the website
 
     def __init__(self, width, height, viewBox_x, viewBox_y, viewBox_width, viewBox_height):
-        #self.width = f"{width}cm"
-        #self.height = f"{height}cm"
-        self.width = "420px"
-        self.height = "530px"
-        self.viewBox_x = viewBox_x
-        self.viewBox_y = viewBox_y
-        self.viewBox_width = viewBox_width
-        self.viewBox_height = viewBox_height
+
+        # Parameters passed in during creation
+        self.width = f"{width}px"                #  width of SVG element on page
+        self.height = f"{height}px"              #  height of SVG element on page
+        self.viewBox_x = viewBox_x               #  viewBox min x
+        self.viewBox_y = viewBox_y               #  viewBox min y
+        self.viewBox_width = viewBox_width       #  viewBox width
+        self.viewBox_height = viewBox_height     #  viewBox height
+
+        #  string representation of the whole viewBox:
         self.viewBox_custom = f"{viewBox_x} {viewBox_y} {viewBox_width} {viewBox_height}"
 
 
@@ -39,8 +41,8 @@ class Field:
         self.owner = owner              #  name of the farmer who owns the field
         self.crop_id = crop_id          # a number identifying the crop in the field
 
-        #  Derived Attributes
-        self.finds_in_this_field = []   # a list containing the finds found in this field (populated using external function)
+        #  Derived Attributes (populated at runtime)
+        self.finds_in_this_field = []   # a list containing the finds found in this field
 
         #  Attributes calculated from object properties
         self.width = hix - lowx                     #  field width (in map units)
@@ -56,7 +58,7 @@ class Field:
         return f"Field({self.field_id}, {self.lowx}, {self.lowy}, {self.hix}, {self.hiy})"
 
     def __str__(self):
-        return f"Field {self.field_id} - Bottom Left ({self.lowx}, {self.lowy}) Top Right ({self.hix}, {self.hiy})"
+        return f"Field {self.field_id} - Bottom Left({self.lowx},{self.lowy}) Top Right({self.hix},{self.hiy})"
 
 
 class Find:
@@ -70,11 +72,15 @@ class Find:
         self.find_type = find_type      #  a number identifying the find type (class)
         self.depth = f"{depth:.2f}"     #  the depth of the find, formatted to 2 decimal places
         self.field_notes = field_notes  #  a string field with field notes
-        self.class_name = 'none'        #  holds the text name of the crop populated at runtime by referencing the list of MyClass objects
+        self.class_name = 'none'        #  holds the text name of the crop populated at runtime
 
-        # Derived Attributes (populated at runtime)
-        self.in_which_fields = []       #  a list of which field(s) the find is found in (it can be more than 1 field if on the border between fields!)
-        self.fill = get_find_colour(self.find_type)     #  applies a colour to each find based on the find type
+        # Derived Attributes
+
+        #  a list of which field(s) the find is found in
+        #  (it can be more than 1 field if on the border between fields!)
+        self.in_which_fields = []       #  populated at runtime
+
+        self.fill = get_find_colour(self.find_type)  #  applies a colour based on the find type
 
     #  User & coder friendly representations of Find objects
     def __repr__(self):
@@ -128,8 +134,10 @@ def getDBdata(table_name, order_column):
     #  Accesses the Oracle database and creates Find, Field, Crop & MyClass
     #  objects with which to create the website visualiser tools
     results = []
+    with open('../../../details.txt', 'r') as f:
+        pwd = f.readline().strip()
     try:
-        conn = cx_Oracle.connect("s0092179/1Annenkov650@geoslearn")
+        conn = cx_Oracle.connect(f"s0092179/{pwd}@geoslearn")
         c = conn.cursor()
         c.execute(f"SELECT * FROM {table_name} ORDER BY {order_column}")
     except:
@@ -138,7 +146,7 @@ def getDBdata(table_name, order_column):
     if table_name == "MY_FIELDS":
         fields_list = []                                #  initialise an empty list
         for row in c:
-            (a, b, c, d, e, f, g, h) = row              # pack the results of the query into a tuple with the correct number of elements
+            (a, b, c, d, e, f, g, h) = row              # pack the results of the query into a tuple
             field_name = table_name[:-1] + str(a)
             field_name = Field(a, b, c, d, e, f, g, h)  # create a new Field object for each row in the table
             fields_list.append(field_name)              # add the newly created field to the "fields_list" list
@@ -330,7 +338,8 @@ if __name__ == '__main__':
     max_find_coords = get_max_find_coordinates(find_objects)
 
     #  Define a new GraphicsArea object which contains the necessary attributes for the SVG rendering on the website
-    graphics_area_for_svg = GraphicsArea(15, 15, -1, 1, 16, 18)
+    #  (SVG container width in pixels, SVG conatiner height in pixels, viewBox min x, ViewBox min y, viewBox width, viewBox height)
+    graphics_area_for_svg = GraphicsArea(420, 530, -1, 1, 16, 18)
 
     #  render the html template to the browser
     render_html()
